@@ -39,7 +39,19 @@ jobs:
           cat <<EOF > app/google-services.json
           {
             "project_info": { "project_number": "123456789", "project_id": "dummy-project" },
-            "client": [ { "client_info": { "mobilesdk_app_id": "1:123456789:android:abcdef", "android_client_info": { "package_name": "com.aistudio.colorblock.blast" } } } ]
+            "client": [
+              {
+                "client_info": { 
+                  "mobilesdk_app_id": "1:123456789:android:abcdef", 
+                  "android_client_info": { "package_name": "com.aistudio.colorblock.blast" } 
+                },
+                "api_key": [
+                  {
+                    "current_key": "dummy-api-key-123456789"
+                  }
+                ]
+              }
+            ]
           }
           EOF
 
