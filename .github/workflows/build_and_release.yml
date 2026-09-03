@@ -26,6 +26,23 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Prepare Build Files (Keystore & Google Services)
+        run: |
+          # 1. Decode debug.keystore from base64 if it exists, otherwise generate a new one
+          if [ -f "debug.keystore.base64" ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          else
+            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "C=US, O=Android, CN=Android Debug"
+          fi
+          
+          # 2. Create a dummy google-services.json to prevent the Google Services plugin from failing
+          cat <<EOF > app/google-services.json
+          {
+            "project_info": { "project_number": "123456789", "project_id": "dummy-project" },
+            "client": [ { "client_info": { "mobilesdk_app_id": "1:123456789:android:abcdef", "android_client_info": { "package_name": "com.aistudio.weathertracker.kxmpzq" } } } ]
+          }
+          EOF
+
       - name: Build Debug APK (Playable/Installable)
         run: gradle assembleDebug
         
