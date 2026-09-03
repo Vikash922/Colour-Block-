@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Rich deep cosmic blue-violet gradient background -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108"
+                android:type="linear">
+                <item android:color="#FF0F172A" android:offset="0.0" />
+                <item android:color="#FF1E1B4B" android:offset="0.5" />
+                <item android:color="#FF311042" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Subtle board grid backdrop lines -->
+    <path
+        android:strokeColor="#1FFFFFFF"
+        android:strokeWidth="1.2"
+        android:pathData="M24,24 L84,24 M24,44 L84,44 M24,64 L84,64 M24,84 L84,84 M24,24 L24,84 M44,24 L44,84 M64,24 L64,84 M84,24 L84,84" />
+</vector>
