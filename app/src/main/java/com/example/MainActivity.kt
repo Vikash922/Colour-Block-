@@ -15,6 +15,7 @@ import com.example.data.ScorePreferencesRepository
 import com.example.ui.GameScreen
 import com.example.ui.theme.ColorBlockTheme
 import com.example.ui.theme.DeepSpace
+import com.example.updater.AppUpdater
 import com.example.viewmodel.GameViewModel
 
 class MainActivity : ComponentActivity() {
@@ -41,6 +42,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = DeepSpace
                 ) {
+                    AppUpdater("https://raw.githubusercontent.com/Vikash922/ColorBlock/main/update.json")
                     GameScreen(viewModel = gameViewModel)
                 }
             }
