@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Icon
@@ -56,6 +57,8 @@ fun HeaderComposable(
     isSoundEnabled: Boolean,
     onToggleSound: () -> Unit,
     onRestartGame: () -> Unit,
+    onSettingsClick: () -> Unit = {},
+    isDailyChallenge: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -68,39 +71,57 @@ fun HeaderComposable(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // High Score Pill
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(HighScorePill)
-                    .padding(horizontal = 14.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.EmojiEvents,
-                    contentDescription = "Trophy",
-                    tint = Color(0xFFFFD700), // Gold
-                    modifier = Modifier.size(22.dp)
-                )
-                Text(
-                    text = highScore.toString(),
-                    color = Color(0xFFFFD700),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+            // High Score Pill or Daily Challenge Title
+            if (isDailyChallenge) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Brush.horizontalGradient(listOf(Color(0xFFE53935), Color(0xFFF57C00))))
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "DAILY CHALLENGE",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(HighScorePill)
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.EmojiEvents,
+                        contentDescription = "Trophy",
+                        tint = Color(0xFFFFD700), // Gold
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Text(
+                        text = highScore.toString(),
+                        color = Color(0xFFFFD700),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
-            // Settings Icon (mapped to sound toggle for now, or restart if long press, but keeping it simple)
+            // Settings Icon
             IconButton(
-                onClick = onToggleSound,
+                onClick = onSettingsClick,
                 modifier = Modifier.size(48.dp).testTag("settings_button")
             ) {
                 Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    tint = Color(0xFF90A4E2), // Soft light blue for unselected/settings
-                    modifier = Modifier.size(28.dp)
+                    imageVector = Icons.Default.Pause,
+                    contentDescription = "Pause/Settings",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
                 )
             }
         }
@@ -165,3 +186,4 @@ fun HeaderComposable(
         }
     }
 }
+

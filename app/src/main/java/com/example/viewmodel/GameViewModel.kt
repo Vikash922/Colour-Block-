@@ -50,12 +50,31 @@ class GameViewModel(
 
     private var hasNotifiedHighScoreThisSession = false
 
+    protected var randomGen: kotlin.random.Random = kotlin.random.Random.Default
+    
+    // Daily challenge tracking
+    private val _isDailyChallenge = MutableStateFlow(false)
+    val isDailyChallenge: StateFlow<Boolean> = _isDailyChallenge.asStateFlow()
+
     init {
         viewModelScope.launch {
             val savedHighScore = scoreRepository.highScoreFlow.first()
             _gameState.update { it.copy(highScore = savedHighScore) }
             initGame()
         }
+    }
+
+    fun startDailyChallenge() {
+        val todaySeed = java.time.LocalDate.now().toEpochDay()
+        randomGen = kotlin.random.Random(todaySeed)
+        _isDailyChallenge.value = true
+        initGameInternal()
+    }
+
+    fun startRegularGame() {
+        randomGen = kotlin.random.Random.Default
+        _isDailyChallenge.value = false
+        initGameInternal()
     }
 
     fun toggleSound() {
@@ -67,10 +86,17 @@ class GameViewModel(
     }
 
     /**
+     * Public alias for legacy code that just wants to restart the current mode
+     */
+    fun initGame() {
+        if (_isDailyChallenge.value) startDailyChallenge() else startRegularGame()
+    }
+
+    /**
      * Resets the 8x8 matrix, loads high score from DataStore, resets score/combo,
      * and populates the 3-piece dock using ShapeFactory. Also pre-fills board.
      */
-    fun initGame() {
+    private fun initGameInternal() {
         viewModelScope.launch {
             val currentHighScore = scoreRepository.highScoreFlow.first()
             var newGrid = Array(8) { IntArray(8) { 0 } }
@@ -78,7 +104,7 @@ class GameViewModel(
 
             // Pre-fill board with 4 random blocks to simulate mid-game start
             repeat(4) {
-                val shape = ShapeFactory.getRandomShape()
+                val shape = ShapeFactory.getRandomShape(randomGen)
                 val validSpots = mutableListOf<Pair<Int, Int>>()
                 for (r in 0..7) {
                     for (c in 0..7) {
@@ -88,14 +114,14 @@ class GameViewModel(
                     }
                 }
                 if (validSpots.isNotEmpty()) {
-                    val spot = validSpots.random()
+                    val spot = validSpots.random(randomGen)
                     val result = placeShapeSimulated(newGrid, shape, spot.first, spot.second)
                     newGrid = result.first
                     newScore += result.second
                 }
             }
 
-            val newDock = ShapeFactory.getRandomDockShapes(3)
+            val newDock = ShapeFactory.getRandomDockShapes(3, randomGen)
             hasNotifiedHighScoreThisSession = false
 
             _gameState.value = GameState(
@@ -307,7 +333,7 @@ class GameViewModel(
 
         // 6. Refill dock if all 3 placed
         val finalDock = if (updatedDock.all { it == null }) {
-            ShapeFactory.getRandomDockShapes(3)
+            ShapeFactory.getRandomDockShapes(3, randomGen)
         } else {
             updatedDock
         }
