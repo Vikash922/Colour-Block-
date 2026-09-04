@@ -128,23 +128,48 @@ fun HeaderComposable(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Huge Score Text
-        Text(
-            text = score.toString(),
-            color = Color.White,
-            fontSize = 72.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp
-        )
+        // Huge Score Text (Fixed height to prevent layout shifts)
+        val scoreAnimScale = androidx.compose.runtime.remember(score) { androidx.compose.animation.core.Animatable(if (score > 0) 1.2f else 1f) }
+        androidx.compose.runtime.LaunchedEffect(score) {
+            if (score > 0) {
+                scoreAnimScale.animateTo(
+                    targetValue = 1f,
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 300, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier.height(84.dp).fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = score.toString(),
+                fontSize = 72.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 1.sp,
+                maxLines = 1,
+                style = androidx.compose.ui.text.TextStyle(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color.White, Color(0xFFB0BEC5))
+                    )
+                ),
+                modifier = Modifier.scale(scoreAnimScale.value)
+            )
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
 
         // Combo Streak Badge
-        AnimatedVisibility(
-            visible = comboCount > 0,
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut()
+        Box(
+            modifier = Modifier.height(44.dp),
+            contentAlignment = Alignment.Center
         ) {
+            this@Column.AnimatedVisibility(
+                visible = comboCount > 0,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
             val infiniteTransition = rememberInfiniteTransition(label = "combo_pulse")
             val pulseScale by infiniteTransition.animateFloat(
                 initialValue = 1f,
@@ -183,6 +208,7 @@ fun HeaderComposable(
                     )
                 }
             }
+        }
         }
     }
 }

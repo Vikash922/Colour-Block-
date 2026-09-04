@@ -39,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -85,6 +86,7 @@ fun GameScreen(
     val density = LocalDensity.current
 
     // Board layout coordinates for touch translation
+    var rootCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     var boardCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val slotCoordinates = remember { mutableMapOf<Int, LayoutCoordinates>() }
 
@@ -130,8 +132,12 @@ fun GameScreen(
         val board = boardCoordinates ?: return null
         val boardPosInWindow = board.positionInWindow()
 
-        val shapeWidthPx = shape.cols * boardCellSizePx
-        val shapeHeightPx = shape.rows * boardCellSizePx
+        val boardWidth = board.size.width.toFloat()
+        val actualSpacingPx = 2f
+        val effectiveCellSize = (boardWidth - (actualSpacingPx * 7)) / 8f
+
+        val shapeWidthPx = shape.cols * effectiveCellSize + (shape.cols - 1).coerceAtLeast(0) * actualSpacingPx
+        val shapeHeightPx = shape.rows * effectiveCellSize + (shape.rows - 1).coerceAtLeast(0) * actualSpacingPx
 
         // The top-left corner of the piece floating above the finger
         val pieceTopLeftX = dragWindowPos.x - (shapeWidthPx / 2f)
@@ -140,15 +146,10 @@ fun GameScreen(
         val relativeX = pieceTopLeftX - boardPosInWindow.x
         val relativeY = pieceTopLeftY - boardPosInWindow.y
 
-        val boardWidth = board.size.width.toFloat()
-        // Account for board padding: 10dp outer + 2dp inner = 12dp
-        val boardPaddingPx = with(density) { 12.dp.toPx() }
-        val spacingPx = with(density) { 4.5f.dp.toPx() }
-        val effectiveCellSize = (boardWidth - (boardPaddingPx * 2) - (spacingPx * 7)) / 8f
-        val step = effectiveCellSize + spacingPx
+        val step = effectiveCellSize + actualSpacingPx
 
-        val targetCol = ((relativeX - boardPaddingPx + step * 0.5f) / step).toInt().coerceIn(-1, 8)
-        val targetRow = ((relativeY - boardPaddingPx + step * 0.5f) / step).toInt().coerceIn(-1, 8)
+        val targetCol = (relativeX / step).roundToInt()
+        val targetRow = (relativeY / step).roundToInt()
 
         return if (targetRow in 0..7 && targetCol in 0..7) {
             Pair(targetRow, targetCol)
@@ -163,6 +164,7 @@ fun GameScreen(
             .background(AppBackground)
             .statusBarsPadding()
             .navigationBarsPadding()
+            .onGloballyPositioned { rootCoordinates = it }
             .offset { IntOffset(shakeOffset.value.roundToInt(), 0) },
         contentAlignment = Alignment.TopCenter
     ) {
@@ -273,20 +275,32 @@ fun GameScreen(
         if (draggingIndex != null) {
             val draggedShape = gameState.dock.getOrNull(draggingIndex!!)
             if (draggedShape != null) {
-                val shapeWidthPx = draggedShape.cols * boardCellSizePx
-                val shapeHeightPx = draggedShape.rows * boardCellSizePx
+                val actualSpacingPx = 2f
+                val actualCellSizePx = if (boardCoordinates != null) {
+                    (boardCoordinates!!.size.width.toFloat() - (actualSpacingPx * 7)) / 8f
+                } else {
+                    boardCellSizePx
+                }
+                
+                val shapeWidthPx = draggedShape.cols * actualCellSizePx + (draggedShape.cols - 1).coerceAtLeast(0) * actualSpacingPx
+                val shapeHeightPx = draggedShape.rows * actualCellSizePx + (draggedShape.rows - 1).coerceAtLeast(0) * actualSpacingPx
 
-                val xOffset = (dragWindowPosition.x - shapeWidthPx / 2f).roundToInt()
-                val yOffset = (dragWindowPosition.y - shapeHeightPx / 2f - verticalOffsetPx).roundToInt()
+                val rootPos = rootCoordinates?.positionInWindow() ?: Offset.Zero
+                val xOffset = (dragWindowPosition.x - rootPos.x - shapeWidthPx / 2f).roundToInt()
+                val yOffset = (dragWindowPosition.y - rootPos.y - shapeHeightPx / 2f - verticalOffsetPx).roundToInt()
+
+                val actualCellSizeDp = with(density) { actualCellSizePx.toDp() }
+                val actualSpacingDp = with(density) { actualSpacingPx.toDp() }
 
                 Box(
                     modifier = Modifier
+                        .align(Alignment.TopStart)
                         .offset { IntOffset(xOffset, yOffset) }
                 ) {
                     BlockShapeComposable(
                         shape = draggedShape,
-                        cellSize = boardCellSizeDp,
-                        cellSpacing = 4.dp
+                        cellSize = actualCellSizeDp,
+                        cellSpacing = actualSpacingDp
                     )
                 }
             }

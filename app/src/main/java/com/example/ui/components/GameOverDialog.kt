@@ -27,6 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.scale
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -196,11 +199,23 @@ fun GameOverDialog(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Play Again Action Button
+                    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "play_pulse")
+                    val pulseScale by infiniteTransition.animateFloat(
+                        initialValue = 1f,
+                        targetValue = 1.05f,
+                        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                            animation = androidx.compose.animation.core.tween(800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+                        ),
+                        label = "button_scale"
+                    )
+
                     Button(
                         onClick = onPlayAgain,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp)
+                            .scale(pulseScale)
                             .testTag("play_again_button"),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
