@@ -12,7 +12,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,13 +21,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Whatshot
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -44,10 +41,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.ElectricGold
 import com.example.ui.theme.HighScorePill
-import com.example.ui.theme.HotPink
-import com.example.ui.theme.SunsetOrange
 
 @Composable
 fun HeaderComposable(
@@ -71,54 +65,37 @@ fun HeaderComposable(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // High Score Pill or Daily Challenge Title
-            if (isDailyChallenge) {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Brush.horizontalGradient(listOf(Color(0xFFE53935), Color(0xFFF57C00))))
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "DAILY CHALLENGE",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
-                    )
-                }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(HighScorePill)
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.EmojiEvents,
-                        contentDescription = "Trophy",
-                        tint = Color(0xFFFFD700), // Gold
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Text(
-                        text = highScore.toString(),
-                        color = Color(0xFFFFD700),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+            // High Score Pill
+            Row(
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(HighScorePill)
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.EmojiEvents,
+                    contentDescription = "Trophy",
+                    tint = Color(0xFFFFD700), // Gold
+                    modifier = Modifier.size(22.dp)
+                )
+                Text(
+                    text = highScore.toString(),
+                    color = Color(0xFFFFD700),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             // Settings Icon
             IconButton(
                 onClick = onSettingsClick,
-                modifier = Modifier.size(48.dp).testTag("settings_button")
+                modifier = Modifier.padding(end = 16.dp).size(48.dp).testTag("settings_button")
             ) {
                 Icon(
-                    imageVector = Icons.Default.Pause,
+                    imageVector = Icons.Default.Settings,
                     contentDescription = "Pause/Settings",
                     tint = Color.White,
                     modifier = Modifier.size(32.dp)
@@ -126,9 +103,9 @@ fun HeaderComposable(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Huge Score Text (Fixed height to prevent layout shifts)
+        // Huge Score Text with Heart Background
         val scoreAnimScale = androidx.compose.runtime.remember(score) { androidx.compose.animation.core.Animatable(if (score > 0) 1.2f else 1f) }
         androidx.compose.runtime.LaunchedEffect(score) {
             if (score > 0) {
@@ -140,9 +117,19 @@ fun HeaderComposable(
         }
 
         Box(
-            modifier = Modifier.height(84.dp).fillMaxWidth(),
+            modifier = Modifier.height(100.dp).fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
+            // Heart Icon Behind (Only when score > 500)
+            if (score > 500) {
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = null,
+                    tint = Color(0xFFFF4081),
+                    modifier = Modifier.size(140.dp)
+                )
+            }
+
             Text(
                 text = score.toString(),
                 fontSize = 72.sp,
@@ -151,65 +138,11 @@ fun HeaderComposable(
                 maxLines = 1,
                 style = androidx.compose.ui.text.TextStyle(
                     brush = Brush.verticalGradient(
-                        colors = listOf(Color.White, Color(0xFFB0BEC5))
+                        colors = listOf(Color.White, Color(0xFFE0E0E0))
                     )
                 ),
                 modifier = Modifier.scale(scoreAnimScale.value)
             )
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Combo Streak Badge
-        Box(
-            modifier = Modifier.height(44.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            this@Column.AnimatedVisibility(
-                visible = comboCount > 0,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut()
-            ) {
-            val infiniteTransition = rememberInfiniteTransition(label = "combo_pulse")
-            val pulseScale by infiniteTransition.animateFloat(
-                initialValue = 1f,
-                targetValue = 1.08f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(400, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "combo_scale"
-            )
-
-            Box(
-                modifier = Modifier
-                    .scale(pulseScale)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Brush.linearGradient(listOf(SunsetOrange, HotPink)))
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                    .testTag("combo_badge"),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Whatshot,
-                        contentDescription = "Combo Blast",
-                        tint = Color.White,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = "${comboCount}x",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black
-                    )
-                }
-            }
-        }
-        }
     }
 }
-

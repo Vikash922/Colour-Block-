@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -61,9 +62,11 @@ import com.example.model.BlockShape
 import com.example.ui.components.BlockShapeComposable
 import com.example.ui.components.BoardComposable
 import com.example.ui.components.ComboBlastOverlay
+import com.example.ui.components.ScorePopupOverlay
 import com.example.ui.components.DockComposable
 import com.example.ui.components.GameOverDialog
 import com.example.ui.components.HeaderComposable
+import com.example.ui.components.NewHighScoreOverlay
 import com.example.ui.theme.AppBackground
 import com.example.ui.theme.BlockRed
 import com.example.viewmodel.GameViewModel
@@ -82,6 +85,8 @@ fun GameScreen(
     val isSoundEnabled by viewModel.isSoundEnabled.collectAsState()
     val isDailyChallenge by viewModel.isDailyChallenge.collectAsState()
     val comboEvent by viewModel.lastComboEvent.collectAsState()
+    val scoreEvent by viewModel.lastScorePopup.collectAsState()
+    
 
     val density = LocalDensity.current
 
@@ -99,13 +104,39 @@ fun GameScreen(
     // High Score animation
     var showNewBestAnimation by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showGameOverScreen by remember { mutableStateOf(false) }
+    var showNoSpaceOverlay by remember { mutableStateOf(false) }
+
+    LaunchedEffect(gameState.isGameOver) {
+        if (gameState.isGameOver) {
+            showNoSpaceOverlay = true
+            delay(1500)
+            showNoSpaceOverlay = false
+            showGameOverScreen = true
+        } else {
+            showGameOverScreen = false
+            showNoSpaceOverlay = false
+        }
+    }
     
     val shakeOffset = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(gameState.lastClearedIndices) {
+        if (gameState.lastClearedIndices.isNotEmpty()) {
+            val intensity = 4f
+            scope.launch {
+                repeat(3) {
+                    shakeOffset.animateTo(if (it % 2 == 0) intensity else -intensity, tween(40, easing = LinearEasing))
+                }
+                shakeOffset.animateTo(0f, tween(40))
+            }
+        }
+    }
+
     LaunchedEffect(comboEvent) {
         if (comboEvent != null) {
-            val intensity = (comboEvent!!.comboCount * 8f).coerceAtMost(40f)
+            val intensity = (comboEvent!!.comboCount * 3f).coerceAtMost(12f)
             scope.launch {
                 repeat(4) {
                     shakeOffset.animateTo(if (it % 2 == 0) intensity else -intensity, tween(50, easing = LinearEasing))
@@ -192,10 +223,14 @@ fun GameScreen(
 
             // 2. Board Container (8x8 Grid with relative Combo Overlay)
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                BoardComposable(
+                val dragScale by androidx.compose.animation.core.animateFloatAsState(targetValue = 1.15f, animationSpec = androidx.compose.animation.core.tween(150, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+                Box(modifier = Modifier) {
+                    BoardComposable(
                     grid = gameState.grid,
                     previewState = ghostPreviewState,
                     ghostColor = draggingIndex?.let { gameState.dock.getOrNull(it)?.color },
@@ -208,6 +243,11 @@ fun GameScreen(
                 // Floating Combo Blast Overlay over the board center
                 ComboBlastOverlay(
                     comboEvent = comboEvent,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+                }
+                ScorePopupOverlay(
+                    scoreEvent = scoreEvent,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
@@ -292,10 +332,12 @@ fun GameScreen(
                 val actualCellSizeDp = with(density) { actualCellSizePx.toDp() }
                 val actualSpacingDp = with(density) { actualSpacingPx.toDp() }
 
+                val dragScale by androidx.compose.animation.core.animateFloatAsState(targetValue = 1.15f, animationSpec = androidx.compose.animation.core.tween(150, easing = androidx.compose.animation.core.FastOutSlowInEasing))
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .offset { IntOffset(xOffset, yOffset) }
+                        .scale(dragScale)
                 ) {
                     BlockShapeComposable(
                         shape = draggedShape,
@@ -307,111 +349,33 @@ fun GameScreen(
         }
         
         // 5. New High Score Center Animation
-        AnimatedVisibility(
+        NewHighScoreOverlay(
             visible = showNewBestAnimation,
-            enter = scaleIn(tween(500, easing = FastOutSlowInEasing)) + fadeIn(),
-            exit = scaleOut(tween(300)) + fadeOut(),
             modifier = Modifier.align(Alignment.Center)
-        ) {
+        )
+        
+        if (showNoSpaceOverlay) {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xD9000000))
-                    .padding(32.dp),
+                    .fillMaxSize()
+                    .background(Color(0x80000000)),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "NEW BEST!",
-                        color = Color(0xFFFFD700),
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 2.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = gameState.score.toString(),
-                        color = Color.White,
-                        fontSize = 48.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = "NO MOVES LEFT",
+                    color = Color.White,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Black
+                )
             }
         }
+    }
 
-        // 6. Game Over Dialog
-        if (gameState.isGameOver) {
-            GameOverDialog(
-                score = gameState.score,
-                highScore = gameState.highScore,
-                onPlayAgain = {
-                    viewModel.initGame()
-                }
-            )
-        }
-
-        // 7. Settings / Pause Dialog
-        if (showSettingsDialog) {
-            Dialog(onDismissRequest = { showSettingsDialog = false }) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFF2C39B0))
-                        .padding(32.dp)
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
-                    ) {
-                        Text(
-                            text = "PAUSED",
-                            color = Color.White,
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Black
-                        )
-
-                        // Sound Toggle
-                        Button(
-                            onClick = { viewModel.toggleSound() },
-                            colors = ButtonDefaults.buttonColors(containerColor = if (isSoundEnabled) Color(0xFF00C853) else BlockRed),
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isSoundEnabled) Icons.Default.MusicNote else Icons.Default.MusicOff,
-                                contentDescription = "Toggle Sound"
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(if (isSoundEnabled) "Sound: ON" else "Sound: OFF", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-
-                        // Home Button
-                        Button(
-                            onClick = { 
-                                showSettingsDialog = false
-                                onHomeClick() 
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF57C00)),
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Icon(imageVector = Icons.Default.Home, contentDescription = "Home")
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Quit to Menu", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-
-                        // Resume Button
-                        Button(
-                            onClick = { showSettingsDialog = false },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Text("Resume", color = Color(0xFF2C39B0), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
-                        }
-                    }
-                }
-            }
-        }
+    if (showGameOverScreen) {
+        GameOverDialog(
+            score = gameState.score,
+            highScore = gameState.highScore,
+            onPlayAgain = { viewModel.initGame() }
+        )
     }
 }

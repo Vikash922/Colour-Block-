@@ -89,6 +89,15 @@ private fun DrawScope.drawDockJewelBlock(
     }
     drawPath(path = leftPath, color = Color.White.copy(alpha = 0.15f * color.alpha))
 
+    // Inner diagonal reflection shine
+    val shinePath = Path().apply {
+        moveTo(x + bevelWidth, y + bevelWidth)
+        lineTo(x + cellSize * 0.6f, y + bevelWidth)
+        lineTo(x + bevelWidth, y + cellSize * 0.6f)
+        close()
+    }
+    drawPath(path = shinePath, color = Color.White.copy(alpha = 0.2f * color.alpha))
+
     // Right shadow trapezoid (darker)
     val rightPath = Path().apply {
         moveTo(x + cellSize, y)

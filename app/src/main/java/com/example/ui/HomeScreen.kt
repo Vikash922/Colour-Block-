@@ -30,6 +30,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import com.example.ui.components.FloatingBlocks
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
@@ -37,15 +38,27 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
+import com.example.viewmodel.GameViewModel
 import androidx.compose.ui.graphics.vector.ImageVector
+
+import androidx.compose.ui.window.Dialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.MusicOff
 
 @Composable
 fun HomeScreen(
+    viewModel: GameViewModel,
     onPlayClick: () -> Unit = {},
     onDailyChallengeClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+     
 ) {
+    val gameState by viewModel.gameState.collectAsState()
+    val highScore = gameState.highScore
     var touchEffects by remember { mutableStateOf(listOf<Offset>()) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
+    val isSoundEnabled by viewModel.isSoundEnabled.collectAsState()
     val infiniteTransition = rememberInfiniteTransition(label = "Infinite")
     val scope = rememberCoroutineScope()
     
@@ -63,13 +76,13 @@ fun HomeScreen(
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {
-                        val event = awaitPointerEvent()
+                        val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
                         val change = event.changes.firstOrNull { it.pressed }
                         if (change != null) {
                             val position = change.position
                             touchEffects = touchEffects + position
                             scope.launch {
-                                delay(650)
+                                delay(400)
                                 touchEffects = touchEffects - position
                             }
                         }
@@ -79,12 +92,29 @@ fun HomeScreen(
     ) {
         // 1. Dynamic Background
         AnimatedMeshBackground()
+    FloatingBlocks()
 
         // 2. Touch Effects overlay
         touchEffects.forEach { offset ->
             key(offset) {
                 TapRippleEffect(offset = offset)
             }
+        }
+
+        // Settings Button (Fixed at Top End)
+        IconButton(
+            onClick = { showSettingsDialog = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .padding(24.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Settings,
+                contentDescription = "Settings",
+                tint = Color.White.copy(alpha = 0.8f),
+                modifier = Modifier.size(36.dp)
+            )
         }
 
         // 3. Main Content
@@ -94,31 +124,18 @@ fun HomeScreen(
                 .windowInsetsPadding(WindowInsets.systemBars)
                 .padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceEvenly
         ) {
             
-            // --- TOP: LOGO & SETTINGS ---
+            // --- TOP: LOGO ---
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 10.dp)
+                    .padding(top = 10.dp),
+                contentAlignment = Alignment.Center
             ) {
-                IconButton(
-                    onClick = onSettingsClick,
-                    modifier = Modifier.align(Alignment.TopEnd)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Settings,
-                        contentDescription = "Settings",
-                        tint = Color.White.copy(alpha = 0.8f),
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .graphicsLayer { translationY = floatOffset }
+                    modifier = Modifier.graphicsLayer { translationY = floatOffset }
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.logo),
@@ -130,7 +147,7 @@ fun HomeScreen(
             }
 
             // --- MIDDLE: STATS PANEL ---
-            ModernStatsGrid()
+            ModernStatsGrid(highScore = highScore)
 
             // --- BOTTOM: MAIN BUTTONS ---
             Column(
@@ -138,15 +155,64 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                DailyChallengeButton(onClick = onDailyChallengeClick)
-                PlayButton(onClick = onPlayClick)
+                JourneyButton(onClick = onDailyChallengeClick)
+                ClassicButton(onClick = onPlayClick)
+            }
+        }
+        
+        // --- SETTINGS DIALOG ---
+        if (showSettingsDialog) {
+            Dialog(onDismissRequest = { showSettingsDialog = false }) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0xFF2C39B0))
+                        .padding(32.dp)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        Text(
+                            text = "SETTINGS",
+                            color = Color.White,
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Black
+                        )
+
+                        // Sound Toggle
+                        Button(
+                            onClick = { viewModel.toggleSound() },
+                            colors = ButtonDefaults.buttonColors(containerColor = if (isSoundEnabled) Color(0xFF00C853) else Color(0xFFE53935)),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isSoundEnabled) Icons.Default.MusicNote else Icons.Default.MusicOff,
+                                contentDescription = "Toggle Sound"
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(if (isSoundEnabled) "Sound: ON" else "Sound: OFF", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        // Close Button
+                        Button(
+                            onClick = { showSettingsDialog = false },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Text("Close", color = Color(0xFF2C39B0), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun ModernStatsGrid() {
+fun ModernStatsGrid(highScore: Int) {
     Column(
         modifier = Modifier.fillMaxWidth(0.95f),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -156,29 +222,8 @@ fun ModernStatsGrid() {
             icon = Icons.Rounded.EmojiEvents, 
             iconTint = Color(0xFFFFD54F), 
             label = "HIGHSCORE", 
-            value = "6,556"
+            value = highScore.toString()
         )
-        
-        // Bottom: Streak and Levels
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            StatCardSmall(
-                modifier = Modifier.weight(1f), 
-                icon = Icons.Rounded.LocalFireDepartment, 
-                iconTint = Color(0xFFFF5252), 
-                label = "STREAK", 
-                value = "12"
-            )
-            StatCardSmall(
-                modifier = Modifier.weight(1f), 
-                icon = Icons.Rounded.Star, 
-                iconTint = Color(0xFF64B5F6), 
-                label = "LEVEL", 
-                value = "42"
-            )
-        }
     }
 }
 
@@ -236,7 +281,7 @@ fun StatCardSmall(modifier: Modifier = Modifier, icon: ImageVector, iconTint: Co
 }
 
 @Composable
-fun DailyChallengeButton(onClick: () -> Unit) {
+fun JourneyButton(onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "DailyScale")
@@ -255,33 +300,21 @@ fun DailyChallengeButton(onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Icon(Icons.Rounded.Event, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
+            Icon(Icons.Rounded.LocationOn, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                "DAILY CHALLENGE",
+                "Journey",
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 1.sp
             )
         }
-        
-        // New Badge
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = 10.dp, y = (-8).dp)
-                .background(Color(0xFFE53935), RoundedCornerShape(10.dp))
-                .border(2.dp, Color.White, RoundedCornerShape(10.dp))
-                .padding(horizontal = 8.dp, vertical = 2.dp)
-        ) {
-            Text("NEW!", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Black)
-        }
     }
 }
 
 @Composable
-fun PlayButton(onClick: () -> Unit) {
+fun ClassicButton(onClick: () -> Unit) {
     val infiniteTransition = rememberInfiniteTransition(label = "PlayInfinite")
     val pulse by infiniteTransition.animateFloat(
         initialValue = 0.97f,
@@ -307,7 +340,7 @@ fun PlayButton(onClick: () -> Unit) {
             .scale(scale * pulse)
             .fillMaxWidth(0.95f)
             .shadow(20.dp, RoundedCornerShape(24.dp), spotColor = Color(0xFF00E676))
-            .background(Brush.linearGradient(listOf(Color(0xFF00E676), Color(0xFF00B0FF))), RoundedCornerShape(24.dp))
+            .background(Brush.linearGradient(listOf(Color(0xFF38E06A), Color(0xFF0FB246))), RoundedCornerShape(24.dp))
             .clip(RoundedCornerShape(24.dp))
             .clickable(interactionSource = interactionSource, indication = LocalIndication.current, onClick = onClick)
     ) {
@@ -317,10 +350,10 @@ fun PlayButton(onClick: () -> Unit) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(44.dp))
+            Icon(Icons.Rounded.Dashboard, contentDescription = null, tint = Color.White, modifier = Modifier.size(44.dp))
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                "PLAY NOW",
+                "Classic",
                 color = Color.White,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Black,
@@ -341,39 +374,52 @@ fun PlayButton(onClick: () -> Unit) {
                     end = Offset(xOffset + 100f, height)
                 )
             )
+        
         }
-    }
+        
+        // Continue Badge
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = (-16).dp, y = (0).dp)
+                .background(Color.White, RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+        ) {
+            Text("Continue!", color = Color(0xFF0FB246), fontSize = 12.sp, fontWeight = FontWeight.Black)
+        }
+        }
 }
 
 @Composable
 fun TapRippleEffect(offset: Offset) {
     val radius = remember { Animatable(0f) }
-    val alpha = remember { Animatable(0.8f) }
+    val alpha = remember { Animatable(1f) }
     
     LaunchedEffect(Unit) {
         launch {
-            radius.animateTo(350f, animationSpec = tween(600, easing = FastOutSlowInEasing))
+            radius.animateTo(80f, animationSpec = tween(400, easing = FastOutSlowInEasing))
         }
         launch {
-            alpha.animateTo(0f, animationSpec = tween(600, easing = LinearEasing))
+            alpha.animateTo(0f, animationSpec = tween(400, easing = LinearEasing))
         }
     }
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         drawCircle(
-            color = Color.White.copy(alpha = alpha.value * 0.4f),
+            color = Color.White.copy(alpha = alpha.value * 0.5f),
             radius = radius.value,
             center = offset
         )
         drawCircle(
             color = Color(0xFF64B5F6).copy(alpha = alpha.value),
-            radius = radius.value * 0.8f,
+            radius = radius.value * 1.2f,
             center = offset,
-            style = Stroke(width = 16f)
+            style = Stroke(width = 6f)
         )
+        // Add tiny center spark
         drawCircle(
-            color = Color.White.copy(alpha = alpha.value * 0.8f),
-            radius = radius.value * 0.2f,
+            color = Color.White.copy(alpha = alpha.value),
+            radius = radius.value * 0.3f,
             center = offset
         )
     }

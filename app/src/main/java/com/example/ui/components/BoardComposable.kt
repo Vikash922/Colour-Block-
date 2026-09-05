@@ -2,6 +2,9 @@ package com.example.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.runtime.getValue
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -22,6 +25,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
@@ -40,6 +44,17 @@ fun BoardComposable(
     modifier: Modifier = Modifier
 ) {
     // Animation for line clear flash
+    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "ghostPulse")
+    val ghostPulse by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.7f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "pulse"
+    )
+
     val clearAnim = remember(lastClearedIndices) { Animatable(1f) }
 
     LaunchedEffect(lastClearedIndices) {
@@ -47,7 +62,7 @@ fun BoardComposable(
             clearAnim.snapTo(1f)
             clearAnim.animateTo(
                 targetValue = 0f,
-                animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 600, easing = LinearEasing)
             )
         }
     }
@@ -140,41 +155,83 @@ fun BoardComposable(
                             x = x,
                             y = y,
                             cellSize = cellSize,
-                            color = ghostColor.copy(alpha = 0.5f)
+                            color = ghostColor.copy(alpha = ghostPulse)
                         )
                     }
                 }
             }
 
-            // 5. Draw Cleared Line Burst Animation
+            // 5. Draw Cleared Line Burst & Shatter Animation
             if (clearAlpha > 0.01f && lastClearedIndices.isNotEmpty()) {
-                for ((r, c) in lastClearedIndices) {
-                    if (r in 0..7 && c in 0..7) {
-                        val cx = c * (cellSize + spacing) + cellSize / 2f
-                        val cy = r * (cellSize + spacing) + cellSize / 2f
+                val clearedRows = lastClearedIndices.groupBy { it.first }.filter { it.value.size == 8 }.keys
+                val clearedCols = lastClearedIndices.groupBy { it.second }.filter { it.value.size == 8 }.keys
 
-                        // Expanding flash ripple
-                        val maxRadius = cellSize * 0.9f
-                        val currentRadius = (1f - clearAlpha) * maxRadius + cellSize * 0.3f
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                listOf(
-                                    Color.White.copy(alpha = 0.9f * clearAlpha),
-                                    Color(0xFFFFD700).copy(alpha = 0.6f * clearAlpha),
-                                    Color.Transparent
-                                ),
-                                center = Offset(cx, cy),
-                                radius = currentRadius
-                            ),
-                            radius = currentRadius,
-                            center = Offset(cx, cy)
-                        )
+                val isCombo = clearedRows.size + clearedCols.size >= 2
+
+                val glowBrush = if (isCombo) {
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFFF3B30), Color(0xFFFF9500), Color(0xFFFFCC00), Color(0xFF4CD964), Color(0xFF5AC8FA), Color(0xFF5856D6)),
+                        start = Offset(0f, 0f), end = Offset(boardWidth, boardHeight)
+                    )
+                } else {
+                    Brush.horizontalGradient(
+                        colors = listOf(Color(0xFFFFD700), Color(0xFFFFF8E7), Color(0xFFFFD700))
+                    )
+                }
+
+                // Draw initial bright flash lines that fade fast
+                val flashAlpha = (clearAlpha - 0.5f).coerceAtLeast(0f) * 2f
+                if (flashAlpha > 0f) {
+                    clearedRows.forEach { r ->
+                        val y = r * (cellSize + spacing)
+                        drawRect(brush = glowBrush, topLeft = Offset(0f, y), size = Size(boardWidth, cellSize), alpha = flashAlpha)
+                    }
+                    clearedCols.forEach { c ->
+                        val x = c * (cellSize + spacing)
+                        drawRect(brush = glowBrush, topLeft = Offset(x, 0f), size = Size(cellSize, boardHeight), alpha = flashAlpha)
                     }
                 }
+
+                // Draw Shattering Particles
+                val progress = 1f - clearAlpha
+                val gravityY = progress * progress * 400f
+
+                lastClearedIndices.forEach { (r, c) ->
+                    val baseX = c * (cellSize + spacing)
+                    val baseY = r * (cellSize + spacing)
+
+                    for (i in 0..3) {
+                        val isLeft = i % 2 == 0
+                        val isTop = i < 2
+                        val pieceSize = cellSize / 2f
+
+                        val seed = r * 31 + c * 17 + i
+                        val spreadX = ((seed % 10) - 5) * 12f * progress
+                        val spreadY = -((seed % 15) + 5) * 10f * progress + gravityY
+                        val rot = ((seed % 360) * progress * 2f)
+
+                        val startX = baseX + if (isLeft) 0f else pieceSize
+                        val startY = baseY + if (isTop) 0f else pieceSize
+
+                        val finalX = startX + spreadX
+                        val finalY = startY + spreadY
+
+                        withTransform({
+                            translate(left = finalX + pieceSize / 2, top = finalY + pieceSize / 2)
+                            rotate(rot)
+                        }) {
+                            drawRect(
+                                color = Color.White.copy(alpha = clearAlpha),
+                                topLeft = Offset(-pieceSize / 2, -pieceSize / 2),
+                                size = Size(pieceSize, pieceSize)
+                            )
+                        }
+                    }
+                }
+            }
             }
         }
     }
-}
 
 /**
  * Draws a jewel block mimicking the reference image bevel style.
@@ -215,6 +272,15 @@ private fun DrawScope.drawJewelBlock(
         close()
     }
     drawPath(path = leftPath, color = Color.White.copy(alpha = 0.15f))
+
+    // Inner diagonal reflection shine
+    val shinePath = Path().apply {
+        moveTo(x + bevelWidth, y + bevelWidth)
+        lineTo(x + cellSize * 0.6f, y + bevelWidth)
+        lineTo(x + bevelWidth, y + cellSize * 0.6f)
+        close()
+    }
+    drawPath(path = shinePath, color = Color.White.copy(alpha = 0.2f * color.alpha))
 
     // Right shadow trapezoid (darker)
     val rightPath = Path().apply {

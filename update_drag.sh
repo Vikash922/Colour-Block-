@@ -1,0 +1,2 @@
+sed -i 's/                Box(/                val dragScale by androidx.compose.animation.core.animateFloatAsState(targetValue = 1.15f, animationSpec = androidx.compose.animation.core.tween(150, easing = androidx.compose.animation.core.FastOutSlowInEasing))\n                Box(/g' app/src/main/java/com/example/ui/GameScreen.kt
+sed -i 's/                        .offset { IntOffset(xOffset, yOffset) }/                        .offset { IntOffset(xOffset, yOffset) }\n                        .scale(dragScale)/g' app/src/main/java/com/example/ui/GameScreen.kt

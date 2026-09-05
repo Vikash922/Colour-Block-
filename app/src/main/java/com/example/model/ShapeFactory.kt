@@ -319,7 +319,11 @@ object ShapeFactory {
         return ALL_SHAPES.random(random)
     }
 
+    private val EASY_SHAPES = listOf(DOT, LINE_2_H, LINE_2_V, LINE_3_H, LINE_3_V, SQUARE_2X2, CORNER_TL, CORNER_TR, CORNER_BL, CORNER_BR)
+
     fun getRandomDockShapes(count: Int = 3, random: Random = Random.Default): List<BlockShape> {
-        return List(count) { ALL_SHAPES.random(random) }
+        return List(count) {
+            if (random.nextFloat() < 0.75f) EASY_SHAPES.random(random) else ALL_SHAPES.random(random)
+        }
     }
 }

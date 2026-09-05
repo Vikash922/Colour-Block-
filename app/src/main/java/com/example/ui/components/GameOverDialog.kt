@@ -1,247 +1,178 @@
 package com.example.ui.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Replay
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.draw.scale
-import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.ui.theme.DarkNavy
-import com.example.ui.theme.DeepSpace
-import com.example.ui.theme.ElectricGold
-import com.example.ui.theme.HotPink
-import com.example.ui.theme.NeonCyan
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+import kotlinx.coroutines.delay
 
 @Composable
-fun GameOverDialog(
-    score: Int,
-    highScore: Int,
-    onPlayAgain: () -> Unit
-) {
-    val isNewRecord = score >= highScore && score > 0
+fun GameOverDialog(score: Int, highScore: Int, onPlayAgain: () -> Unit) {
+    var animationStarted by remember { mutableStateOf(false) }
+    
+    val scoreAnim by animateIntAsState(
+        targetValue = if (animationStarted) score else 0,
+        animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing),
+        label = "ScoreCount"
+    )
+
+    LaunchedEffect(Unit) {
+        delay(300)
+        animationStarted = true
+    }
 
     Dialog(
-        onDismissRequest = { /* Game over dialog is non-cancellable without replay */ },
-        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+        onDismissRequest = {},
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        )
     ) {
-        Card(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .testTag("game_over_dialog"),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = DeepSpace),
-            elevation = CardDefaults.cardElevation(defaultElevation = 24.dp)
+                .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(Color(0xFF7B1FA2), Color(0xFF4A148C)))),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        2.dp,
-                        Brush.verticalGradient(
-                            listOf(
-                                if (isNewRecord) ElectricGold else HotPink,
-                                Color(0xFF1E293B)
-                            )
-                        ),
-                        RoundedCornerShape(28.dp)
-                    )
-                    .padding(24.dp)
+            ConfettiBackground()
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Header Icon
-                    Box(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.linearGradient(
-                                    if (isNewRecord) listOf(ElectricGold, Color(0xFFFF6D00))
-                                    else listOf(HotPink, Color(0xFF9D4EDD))
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (isNewRecord) Icons.Default.EmojiEvents else Icons.Default.Replay,
-                            contentDescription = "Game Over Status",
-                            tint = Color.White,
-                            modifier = Modifier.size(38.dp)
-                        )
-                    }
-
-                    // Title
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = if (isNewRecord) "NEW HIGH SCORE!" else "GAME OVER",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Black,
-                            color = if (isNewRecord) ElectricGold else HotPink,
-                            letterSpacing = 1.sp,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = if (isNewRecord) "You reached a new peak!" else "No more valid moves remaining",
-                            fontSize = 13.sp,
-                            color = TextSecondary,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // Score summary container
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(DarkNavy)
-                            .border(1.dp, Color(0xFF223048), RoundedCornerShape(18.dp))
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Final Score",
-                                color = TextSecondary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = score.toString(),
-                                color = NeonCyan,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Black
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(Color(0xFF223048))
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.EmojiEvents,
-                                    contentDescription = null,
-                                    tint = ElectricGold,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = "All-Time Best",
-                                    color = TextSecondary,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                            Text(
-                                text = highScore.toString(),
-                                color = ElectricGold,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Play Again Action Button
-                    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "play_pulse")
-                    val pulseScale by infiniteTransition.animateFloat(
-                        initialValue = 1f,
-                        targetValue = 1.05f,
-                        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                            animation = androidx.compose.animation.core.tween(800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
-                            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+                Text(
+                    text = "Best Score!",
+                    color = Color(0xFFFFD54F),
+                    fontSize = 42.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                // Big Trophy
+                Box(
+                    modifier = Modifier
+                        .size(160.dp)
+                        .shadow(24.dp, RoundedCornerShape(80.dp), spotColor = Color(0xFFFFD700))
+                        .background(
+                            Brush.linearGradient(listOf(Color(0xFFFFD54F), Color(0xFFFF8F00))),
+                            RoundedCornerShape(80.dp)
                         ),
-                        label = "button_scale"
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.EmojiEvents,
+                        contentDescription = "Trophy",
+                        tint = Color.White,
+                        modifier = Modifier.size(90.dp)
                     )
-
-                    Button(
-                        onClick = onPlayAgain,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .scale(pulseScale)
-                            .testTag("play_again_button"),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = NeonCyan,
-                            contentColor = DeepSpace
-                        )
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Text(
-                                text = "PLAY AGAIN",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 1.sp
-                            )
-                        }
-                    }
                 }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Score",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = scoreAnim.toString(),
+                    color = Color.White,
+                    fontSize = 64.sp,
+                    fontWeight = FontWeight.Black
+                )
+
+                Spacer(modifier = Modifier.height(64.dp))
+
+                // Custom Play Button
+                PlayAgainButton(onClick = onPlayAgain)
             }
+        }
+    }
+}
+
+@Composable
+fun PlayAgainButton(onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.90f else 1f, label = "PlayScale")
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulse by infiniteTransition.animateFloat(
+        initialValue = 0.97f,
+        targetValue = 1.03f,
+        animationSpec = infiniteRepeatable(tween(800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "PlayPulse"
+    )
+
+    Box(
+        modifier = Modifier
+            .scale(scale * pulse)
+            .width(200.dp)
+            .height(72.dp)
+            .shadow(20.dp, RoundedCornerShape(36.dp), spotColor = Color(0xFFFFB74D))
+            .background(Brush.horizontalGradient(listOf(Color(0xFFFFB74D), Color(0xFFF57C00))), RoundedCornerShape(36.dp))
+            .clip(RoundedCornerShape(36.dp))
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.PlayArrow,
+            contentDescription = "Play Again",
+            tint = Color.White,
+            modifier = Modifier.size(48.dp)
+        )
+    }
+}
+
+@Composable
+fun ConfettiBackground() {
+    val infiniteTransition = rememberInfiniteTransition(label = "confetti")
+    val offsetY by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(tween(5000, easing = LinearEasing), RepeatMode.Restart),
+        label = "confetti_fall"
+    )
+
+    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+        val colors = listOf(Color(0xFFE91E63), Color(0xFF00BCD4), Color(0xFFFFEB3B), Color(0xFF4CAF50))
+        for (i in 0 until 40) {
+            val startX = (i * 37) % size.width
+            val speed = 1f + (i % 3) * 0.5f
+            val y = (offsetY * speed + i * 50) % size.height
+            val color = colors[i % colors.size]
+            drawRect(
+                color = color,
+                topLeft = Offset(startX, y),
+                size = androidx.compose.ui.geometry.Size(16f, 16f)
+            )
         }
     }
 }

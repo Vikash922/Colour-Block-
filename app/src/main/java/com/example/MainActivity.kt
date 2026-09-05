@@ -75,6 +75,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("home") {
                             HomeScreen(
+                                viewModel = gameViewModel,
                                 onPlayClick = {
                                     gameViewModel.startRegularGame()
                                     navController.navigate("game")

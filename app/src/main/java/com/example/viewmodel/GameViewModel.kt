@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class ScorePopupEvent(val score: Int, val timestamp: Long = System.currentTimeMillis())
+
 data class ComboBlastEvent(
     val linesCleared: Int,
     val comboCount: Int,
@@ -41,6 +43,9 @@ class GameViewModel(
 
     private val _lastComboEvent = MutableStateFlow<ComboBlastEvent?>(null)
     val lastComboEvent: StateFlow<ComboBlastEvent?> = _lastComboEvent.asStateFlow()
+
+    private val _lastScorePopup = MutableStateFlow<ScorePopupEvent?>(null)
+    val lastScorePopup: StateFlow<ScorePopupEvent?> = _lastScorePopup.asStateFlow()
 
     private val _isSoundEnabled = MutableStateFlow(true)
     val isSoundEnabled: StateFlow<Boolean> = _isSoundEnabled.asStateFlow()
@@ -322,14 +327,15 @@ class GameViewModel(
         }
 
         // 5. Score calculation
-        val tileCount = shape.tileCount
+        val tileCount = shape.tileCount * 5
         val totalLines = fullRows.size + fullCols.size
-        val lineBonus = if (totalLines > 0) 10 * totalLines * totalLines else 0
-        val comboBonus = if (totalLines > 0) currentState.comboCount * 15 else 0
+        val lineBonus = if (totalLines > 0) 50 * totalLines * totalLines else 0
+        val comboBonus = if (totalLines > 0) currentState.comboCount * 40 else 0
         val pointsEarned = tileCount + lineBonus + comboBonus
 
         val newScore = currentState.score + pointsEarned
         val newComboCount = if (totalLines > 0) currentState.comboCount + 1 else 0
+        _lastScorePopup.value = ScorePopupEvent(pointsEarned)
 
         // 6. Refill dock if all 3 placed
         val finalDock = if (updatedDock.all { it == null }) {
