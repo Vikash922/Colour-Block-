@@ -375,7 +375,8 @@ fun GameScreen(
         GameOverDialog(
             score = gameState.score,
             highScore = gameState.highScore,
-            onPlayAgain = { viewModel.initGame() }
+            onPlayAgain = { viewModel.initGame() },
+            onHomeClick = onHomeClick
         )
     }
 }

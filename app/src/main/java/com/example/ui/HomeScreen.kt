@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -36,11 +35,8 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.cos
-import kotlin.math.sin
 import com.example.viewmodel.GameViewModel
 import androidx.compose.ui.graphics.vector.ImageVector
-
 import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -52,17 +48,13 @@ fun HomeScreen(
     viewModel: GameViewModel,
     onPlayClick: () -> Unit = {},
     onDailyChallengeClick: () -> Unit = {},
-     
 ) {
     val gameState by viewModel.gameState.collectAsState()
     val highScore = gameState.highScore
-    var touchEffects by remember { mutableStateOf(listOf<Offset>()) }
     var showSettingsDialog by remember { mutableStateOf(false) }
     val isSoundEnabled by viewModel.isSoundEnabled.collectAsState()
     val infiniteTransition = rememberInfiniteTransition(label = "Infinite")
-    val scope = rememberCoroutineScope()
-    
-    // Smooth floating animation for the logo
+
     val floatOffset by infiniteTransition.animateFloat(
         initialValue = -12f,
         targetValue = 12f,
@@ -70,38 +62,17 @@ fun HomeScreen(
         label = "LogoFloat"
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
-                        val change = event.changes.firstOrNull { it.pressed }
-                        if (change != null) {
-                            val position = change.position
-                            touchEffects = touchEffects + position
-                            scope.launch {
-                                delay(400)
-                                touchEffects = touchEffects - position
-                            }
-                        }
-                    }
-                }
-            }
-    ) {
-        // 1. Dynamic Background
-        AnimatedMeshBackground()
-    FloatingBlocks()
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Solid deep blue background
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF1A1F3D))
+        )
 
-        // 2. Touch Effects overlay
-        touchEffects.forEach { offset ->
-            key(offset) {
-                TapRippleEffect(offset = offset)
-            }
-        }
+        FloatingBlocks()
 
-        // Settings Button (Fixed at Top End)
+        // Settings Button
         IconButton(
             onClick = { showSettingsDialog = true },
             modifier = Modifier
@@ -117,7 +88,7 @@ fun HomeScreen(
             )
         }
 
-        // 3. Main Content
+        // Main Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -126,8 +97,7 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            
-            // --- TOP: LOGO ---
+            // Logo
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -139,17 +109,17 @@ fun HomeScreen(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Same Blast Logo",
+                        contentDescription = "Logo",
                         modifier = Modifier.fillMaxWidth(0.9f),
                         contentScale = ContentScale.Fit
                     )
                 }
             }
 
-            // --- MIDDLE: STATS PANEL ---
+            // Stats Panel
             ModernStatsGrid(highScore = highScore)
 
-            // --- BOTTOM: MAIN BUTTONS ---
+            // Buttons
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -159,14 +129,15 @@ fun HomeScreen(
                 ClassicButton(onClick = onPlayClick)
             }
         }
-        
-        // --- SETTINGS DIALOG ---
+
+        // Settings Dialog
         if (showSettingsDialog) {
             Dialog(onDismissRequest = { showSettingsDialog = false }) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFF2C39B0))
+                        .background(Color(0xFF1A1F3D))
+                        .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(24.dp))
                         .padding(32.dp)
                 ) {
                     Column(
@@ -176,14 +147,16 @@ fun HomeScreen(
                         Text(
                             text = "SETTINGS",
                             color = Color.White,
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Black
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 2.sp
                         )
 
-                        // Sound Toggle
                         Button(
                             onClick = { viewModel.toggleSound() },
-                            colors = ButtonDefaults.buttonColors(containerColor = if (isSoundEnabled) Color(0xFF00C853) else Color(0xFFE53935)),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSoundEnabled) Color(0xFF00C853) else Color(0xFFE53935)
+                            ),
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = RoundedCornerShape(16.dp)
                         ) {
@@ -192,17 +165,19 @@ fun HomeScreen(
                                 contentDescription = "Toggle Sound"
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text(if (isSoundEnabled) "Sound: ON" else "Sound: OFF", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                if (isSoundEnabled) "Sound: ON" else "Sound: OFF",
+                                fontSize = 18.sp, fontWeight = FontWeight.Bold
+                            )
                         }
 
-                        // Close Button
                         Button(
                             onClick = { showSettingsDialog = false },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = RoundedCornerShape(16.dp)
                         ) {
-                            Text("Close", color = Color(0xFF2C39B0), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                            Text("Close", color = Color(0xFF1A1F3D), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
                         }
                     }
                 }
@@ -217,11 +192,10 @@ fun ModernStatsGrid(highScore: Int) {
         modifier = Modifier.fillMaxWidth(0.95f),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Top: Huge Score Card
         StatCardBig(
-            icon = Icons.Rounded.EmojiEvents, 
-            iconTint = Color(0xFFFFD54F), 
-            label = "HIGHSCORE", 
+            icon = Icons.Rounded.EmojiEvents,
+            iconTint = Color(0xFFFFD54F),
+            label = "HIGHSCORE",
             value = highScore.toString()
         )
     }
@@ -233,49 +207,25 @@ fun StatCardBig(icon: ImageVector, iconTint: Color, label: String, value: String
         modifier = Modifier
             .fillMaxWidth()
             .shadow(16.dp, RoundedCornerShape(24.dp))
-            .background(Color(0x33FFFFFF), RoundedCornerShape(24.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
+            .background(Color(0xFF252B4D), RoundedCornerShape(24.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
             .clip(RoundedCornerShape(24.dp))
-            .background(Brush.verticalGradient(listOf(Color.White.copy(0.1f), Color.Transparent)))
             .padding(20.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .background(Color(0x44000000), RoundedCornerShape(16.dp)),
+                    .background(Color(0x33FFD700), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(32.dp))
             }
             Spacer(modifier = Modifier.width(20.dp))
             Column {
-                Text(label, color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 Text(value, color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.Black)
             }
-        }
-    }
-}
-
-@Composable
-fun StatCardSmall(modifier: Modifier = Modifier, icon: ImageVector, iconTint: Color, label: String, value: String) {
-    Box(
-        modifier = modifier
-            .shadow(12.dp, RoundedCornerShape(20.dp))
-            .background(Color(0x33FFFFFF), RoundedCornerShape(20.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
-            .clip(RoundedCornerShape(20.dp))
-            .background(Brush.verticalGradient(listOf(Color.White.copy(0.1f), Color.Transparent)))
-            .padding(16.dp)
-    ) {
-        Column(horizontalAlignment = Alignment.Start) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(label, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(value, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
         }
     }
 }
@@ -326,8 +276,7 @@ fun ClassicButton(onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.90f else 1f, label = "PlayScale")
-    
-    // Shimmer effect calculation
+
     val shimmerOffset by infiniteTransition.animateFloat(
         initialValue = -1f,
         targetValue = 2f,
@@ -344,7 +293,6 @@ fun ClassicButton(onClick: () -> Unit) {
             .clip(RoundedCornerShape(24.dp))
             .clickable(interactionSource = interactionSource, indication = LocalIndication.current, onClick = onClick)
     ) {
-        // Button Content
         Row(
             modifier = Modifier.padding(vertical = 20.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -362,22 +310,19 @@ fun ClassicButton(onClick: () -> Unit) {
             )
         }
 
-        // Shimmer shine
         Canvas(modifier = Modifier.matchParentSize()) {
             val width = size.width
             val height = size.height
             val xOffset = shimmerOffset * width
             drawRect(
                 brush = Brush.linearGradient(
-                    colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.4f), Color.Transparent),
+                    colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.3f), Color.Transparent),
                     start = Offset(xOffset - 100f, 0f),
                     end = Offset(xOffset + 100f, height)
                 )
             )
-        
         }
-        
-        // Continue Badge
+
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -386,112 +331,6 @@ fun ClassicButton(onClick: () -> Unit) {
                 .padding(horizontal = 12.dp, vertical = 4.dp)
         ) {
             Text("Continue!", color = Color(0xFF0FB246), fontSize = 12.sp, fontWeight = FontWeight.Black)
-        }
-        }
-}
-
-@Composable
-fun TapRippleEffect(offset: Offset) {
-    val radius = remember { Animatable(0f) }
-    val alpha = remember { Animatable(1f) }
-    
-    LaunchedEffect(Unit) {
-        launch {
-            radius.animateTo(80f, animationSpec = tween(400, easing = FastOutSlowInEasing))
-        }
-        launch {
-            alpha.animateTo(0f, animationSpec = tween(400, easing = LinearEasing))
-        }
-    }
-
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        drawCircle(
-            color = Color.White.copy(alpha = alpha.value * 0.5f),
-            radius = radius.value,
-            center = offset
-        )
-        drawCircle(
-            color = Color(0xFF64B5F6).copy(alpha = alpha.value),
-            radius = radius.value * 1.2f,
-            center = offset,
-            style = Stroke(width = 6f)
-        )
-        // Add tiny center spark
-        drawCircle(
-            color = Color.White.copy(alpha = alpha.value),
-            radius = radius.value * 0.3f,
-            center = offset
-        )
-    }
-}
-
-@Composable
-fun AnimatedMeshBackground() {
-    val infiniteTransition = rememberInfiniteTransition(label = "mesh")
-    val time by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 2f * Math.PI.toFloat(),
-        animationSpec = infiniteRepeatable(tween(20000, easing = LinearEasing), RepeatMode.Restart),
-        label = "time"
-    )
-
-    Canvas(modifier = Modifier.fillMaxSize().background(Color(0xFF0F172A))) { // Dark slate background
-        val width = size.width
-        val height = size.height
-
-        // Orb 1: Deep Blue
-        val x1 = width * 0.5f + cos(time) * width * 0.3f
-        val y1 = height * 0.3f + sin(time * 0.8f) * height * 0.2f
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(Color(0xFF3B82F6).copy(alpha = 0.4f), Color.Transparent),
-                center = Offset(x1, y1),
-                radius = width * 0.8f
-            ),
-            center = Offset(x1, y1),
-            radius = width * 0.8f
-        )
-
-        // Orb 2: Purple
-        val x2 = width * 0.2f + sin(time * 1.2f) * width * 0.4f
-        val y2 = height * 0.7f + cos(time * 1.1f) * height * 0.3f
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(Color(0xFF8B5CF6).copy(alpha = 0.4f), Color.Transparent),
-                center = Offset(x2, y2),
-                radius = width * 0.9f
-            ),
-            center = Offset(x2, y2),
-            radius = width * 0.9f
-        )
-        
-        // Orb 3: Cyan
-        val x3 = width * 0.8f + cos(time * 0.9f) * width * 0.3f
-        val y3 = height * 0.8f + sin(time * 1.3f) * height * 0.2f
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(Color(0xFF06B6D4).copy(alpha = 0.4f), Color.Transparent),
-                center = Offset(x3, y3),
-                radius = width * 0.7f
-            ),
-            center = Offset(x3, y3),
-            radius = width * 0.7f
-        )
-        
-        // Background Grid Pattern (subtle)
-        val squareSize = 140f
-        val spacing = 280f
-        val yOffset = (time * 50f) % spacing
-        for (i in -4..20) {
-            for (j in -2..10) {
-                val gx = j * spacing + (i % 2) * (spacing / 2)
-                val gy = i * spacing + yOffset
-                drawRect(
-                    color = Color.White.copy(alpha = 0.03f),
-                    topLeft = Offset(gx, gy),
-                    size = androidx.compose.ui.geometry.Size(squareSize, squareSize)
-                )
-            }
         }
     }
 }
