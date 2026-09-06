@@ -10,11 +10,11 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
+  namespace = "com.colorblock.game"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.aistudio.colorblock.blast"
+    applicationId = "com.colorblock.game"
     minSdk = 26
     targetSdk = 36
     versionCode = 1
