@@ -35,7 +35,7 @@ jobs:
               {
                 "client_info": { 
                   "mobilesdk_app_id": "1:123456789:android:abcdef", 
-                  "android_client_info": { "package_name": "com.colorblock.game" } 
+                  "android_client_info": { "package_name": "com.smashblock.game" } 
                 },
                 "api_key": [ { "current_key": "dummy-api-key-123456789" } ]
               }

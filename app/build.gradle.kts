@@ -10,11 +10,11 @@ plugins {
 }
 
 android {
-  namespace = "com.colorblock.game"
+  namespace = "com.smashblock.game"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.colorblock.game"
+    applicationId = "com.smashblock.game"
     minSdk = 26
     targetSdk = 36
     versionCode = 1
