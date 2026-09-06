@@ -35,7 +35,7 @@ jobs:
               {
                 "client_info": { 
                   "mobilesdk_app_id": "1:123456789:android:abcdef", 
-                  "android_client_info": { "package_name": "com.aistudio.colorblock.blast" } 
+                  "android_client_info": { "package_name": "com.colorblock.game" } 
                 },
                 "api_key": [ { "current_key": "dummy-api-key-123456789" } ]
               }
@@ -48,18 +48,18 @@ jobs:
 
       - name: Rename APK for Release
         run: |
-          mv app/build/outputs/apk/release/app-release.apk ColorBlock.apk
+          mv app/build/outputs/apk/release/app-release.apk SmashBlock.apk
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ColorBlock
-          path: ColorBlock.apk
+          name: SmashBlock
+          path: SmashBlock.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v1.0.${{ github.run_number }}"
           name: "Update v1.0.${{ github.run_number }}"
-          files: ColorBlock.apk
+          files: SmashBlock.apk
           generate_release_notes: true
