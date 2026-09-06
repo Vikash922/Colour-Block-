@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "455213164861",
+    "project_id": "smash-block-67d0d",
+    "storage_bucket": "smash-block-67d0d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:455213164861:android:02f487a44c8f7d9292fd54",
+        "android_client_info": {
+          "package_name": "com.smashblock.game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOC5I_aZY8XKqukKzgFSiFwjMj3YIAaJ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
