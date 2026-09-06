@@ -1,0 +1,2 @@
+sed -i 's/import androidx.compose.animation.core.LinearEasing/import androidx.compose.animation.core.LinearEasing\nimport androidx.compose.animation.core.animateFloat/g' app/src/main/java/com/example/ui/components/BoardComposable.kt
+sed -i 's/import androidx.compose.animation.core.animateFloat/import androidx.compose.animation.core.animateFloat\nimport androidx.compose.runtime.getValue/g' app/src/main/java/com/example/ui/components/BoardComposable.kt

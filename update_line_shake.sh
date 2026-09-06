@@ -1,0 +1,2 @@
+sed -i '/    LaunchedEffect(comboEvent) {/i\
+    LaunchedEffect(gameState.lastClearedIndices) {\n        if (gameState.lastClearedIndices.isNotEmpty()) {\n            val intensity = 10f\n            scope.launch {\n                repeat(3) {\n                    shakeOffset.animateTo(if (it % 2 == 0) intensity else -intensity, tween(40, easing = LinearEasing))\n                }\n                shakeOffset.animateTo(0f, tween(40))\n            }\n        }\n    }\n' app/src/main/java/com/example/ui/GameScreen.kt

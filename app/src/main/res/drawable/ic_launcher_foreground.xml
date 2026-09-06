@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Top Left Cyan Jewel Block -->
+    <path
+        android:pathData="M32,32 h18 v18 h-18 z"
+        android:fillColor="#FF06B6D4" />
+    <path
+        android:pathData="M32,32 h18 v4 h-18 z"
+        android:fillColor="#80E0F2FE" />
+    <path
+        android:pathData="M32,32 v18 h4 v-18 z"
+        android:fillColor="#40FFFFFF" />
+    <path
+        android:pathData="M32,46 h18 v4 h-18 z"
+        android:fillColor="#40000000" />
+
+    <!-- Top Right Amber Jewel Block -->
+    <path
+        android:pathData="M54,32 h18 v18 h-18 z"
+        android:fillColor="#FFF59E0B" />
+    <path
+        android:pathData="M54,32 h18 v4 h-18 z"
+        android:fillColor="#80FEF3C7" />
+    <path
+        android:pathData="M54,32 v18 h4 v-18 z"
+        android:fillColor="#40FFFFFF" />
+    <path
+        android:pathData="M54,46 h18 v4 h-18 z"
+        android:fillColor="#40000000" />
+
+    <!-- Bottom Left Rose Jewel Block -->
+    <path
+        android:pathData="M32,54 h18 v18 h-18 z"
+        android:fillColor="#FFF43F5E" />
+    <path
+        android:pathData="M32,54 h18 v4 h-18 z"
+        android:fillColor="#80FFE4E6" />
+    <path
+        android:pathData="M32,54 v18 h4 v-18 z"
+        android:fillColor="#40FFFFFF" />
+    <path
+        android:pathData="M32,68 h18 v4 h-18 z"
+        android:fillColor="#40000000" />
+
+    <!-- Bottom Right Violet Jewel Block -->
+    <path
+        android:pathData="M54,54 h18 v18 h-18 z"
+        android:fillColor="#FF8B5CF6" />
+    <path
+        android:pathData="M54,54 h18 v4 h-18 z"
+        android:fillColor="#80EDE9FE" />
+    <path
+        android:pathData="M54,54 v18 h4 v-18 z"
+        android:fillColor="#40FFFFFF" />
+    <path
+        android:pathData="M54,68 h18 v4 h-18 z"
+        android:fillColor="#40000000" />
+
+    <!-- Central Combo Blast Star -->
+    <path
+        android:pathData="M52,48 L54,42 L56,48 L62,50 L56,52 L54,58 L52,52 L46,50 Z"
+        android:fillColor="#FFFFFFFF" />
+
+    <!-- Sparkle accent top right -->
+    <path
+        android:pathData="M74,26 L75,22 L76,26 L80,27 L76,28 L75,32 L74,28 L70,27 Z"
+        android:fillColor="#FFFEF08A" />
+
+    <!-- Sparkle accent bottom left -->
+    <path
+        android:pathData="M24,74 L25,70 L26,74 L30,75 L26,76 L25,80 L24,76 L20,75 Z"
+        android:fillColor="#FFA7F3D0" />
+</vector>
