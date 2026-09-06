@@ -91,7 +91,7 @@ class GameEngine(
             highScore = maxOf(_gameState.value.highScore, currentHighScore),
             comboCount = 0,
             isGameOver = false,
-            lastClearedIndices = emptySet()
+            lastClearedIndices = emptyMap()
         )
         _lastComboEvent.value = null
     }
@@ -235,15 +235,15 @@ class GameEngine(
             if (isFull) fullCols.add(c)
         }
 
-        val clearedIndices = mutableSetOf<Pair<Int, Int>>()
+        val clearedIndices = mutableMapOf<Pair<Int, Int>, Int>()
         for (r in fullRows) {
-            for (c in 0 until 8) clearedIndices.add(Pair(r, c))
+            for (c in 0 until 8) clearedIndices[Pair(r, c)] = newGrid[r][c]
         }
         for (c in fullCols) {
-            for (r in 0 until 8) clearedIndices.add(Pair(r, c))
+            for (r in 0 until 8) clearedIndices[Pair(r, c)] = newGrid[r][c]
         }
 
-        for ((r, c) in clearedIndices) {
+        for ((r, c) in clearedIndices.keys) {
             newGrid[r][c] = 0
         }
 

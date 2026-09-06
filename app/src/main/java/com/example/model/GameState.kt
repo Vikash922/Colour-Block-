@@ -7,7 +7,7 @@ data class GameState(
     val highScore: Int = 0,
     val comboCount: Int = 0,
     val isGameOver: Boolean = false,
-    val lastClearedIndices: Set<Pair<Int, Int>> = emptySet()
+    val lastClearedIndices: Map<Pair<Int, Int>, Int> = emptyMap()
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
