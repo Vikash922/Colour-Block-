@@ -39,17 +39,17 @@ fun BoardComposable(
     grid: Array<IntArray>,
     previewState: PreviewState?,
     ghostColor: Color?,
-    lastClearedIndices: Set<Pair<Int, Int>>,
+    lastClearedIndices: Map<Pair<Int, Int>, Int>,
     onBoardGloballyPositioned: (LayoutCoordinates) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Animation for line clear flash
     val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "ghostPulse")
     val ghostPulse by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.7f,
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            animation = androidx.compose.animation.core.tween(800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        initialValue = 0.2f,
+        targetValue = 0.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = LinearEasing),
             repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
         ),
         label = "pulse"
@@ -66,40 +66,35 @@ fun BoardComposable(
             )
         }
     }
+    val clearAlpha = clearAnim.value
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(8f))
-            .background(GridLine) // The thin line color is the background
+            .fillMaxWidth()
             .onGloballyPositioned { coordinates ->
                 onBoardGloballyPositioned(coordinates)
             }
             .testTag("game_board")
     ) {
-        val clearAlpha = clearAnim.value
-
         Canvas(modifier = Modifier.fillMaxSize()) {
             val boardWidth = size.width
             val boardHeight = size.height
-            val spacing = 2f // Thinner spacing for modern flat look
-            val totalSpacing = spacing * 7 // 7 inner gaps
-            val cellSize = (boardWidth - totalSpacing) / 8f
-            // Minimal corner radius if any, let's keep it very slight
-            val cornerRadius = CornerRadius(0f, 0f)
+            val spacing = 2.dp.toPx()
+            val totalSpacing = spacing * 7
+            val cellSize = (boardWidth - totalSpacing) / 8
 
-            // 1. Draw Empty Grid Cell Slots
+            // 1. Draw Empty Grid Slots
             for (r in 0 until 8) {
                 for (c in 0 until 8) {
                     val x = c * (cellSize + spacing)
                     val y = r * (cellSize + spacing)
 
                     drawRoundRect(
-                        color = GridBackground,
+                        color = Color.White.copy(alpha = 0.05f),
                         topLeft = Offset(x, y),
                         size = Size(cellSize, cellSize),
-                        cornerRadius = cornerRadius
+                        cornerRadius = CornerRadius(cellSize * 0.15f)
                     )
                 }
             }
@@ -119,7 +114,7 @@ fun BoardComposable(
                     val x = c * (cellSize + spacing)
                     drawRect(
                         color = glowColor,
-                        topLeft = Offset(x, 0f),
+                        topLeft = Offset(0f, 0f),
                         size = Size(cellSize, boardHeight)
                     )
                 }
@@ -129,7 +124,7 @@ fun BoardComposable(
             for (r in 0 until 8) {
                 for (c in 0 until 8) {
                     val colorId = grid[r][c]
-                    if (colorId > 0) {
+                    if (colorId > 0 && !lastClearedIndices.containsKey(r to c)) {
                         val x = c * (cellSize + spacing)
                         val y = r * (cellSize + spacing)
                         val blockColor = ShapeColors.getColorForId(colorId)
@@ -163,8 +158,8 @@ fun BoardComposable(
 
             // 5. Draw Cleared Line Burst & Shatter Animation
             if (clearAlpha > 0.01f && lastClearedIndices.isNotEmpty()) {
-                val clearedRows = lastClearedIndices.groupBy { it.first }.filter { it.value.size == 8 }.keys
-                val clearedCols = lastClearedIndices.groupBy { it.second }.filter { it.value.size == 8 }.keys
+                val clearedRows = lastClearedIndices.keys.groupBy { it.first }.filter { it.value.size == 8 }.keys
+                val clearedCols = lastClearedIndices.keys.groupBy { it.second }.filter { it.value.size == 8 }.keys
 
                 val isCombo = clearedRows.size + clearedCols.size >= 2
 
@@ -196,7 +191,10 @@ fun BoardComposable(
                 val progress = 1f - clearAlpha
                 val gravityY = progress * progress * 400f
 
-                lastClearedIndices.forEach { (r, c) ->
+                lastClearedIndices.forEach { (pos, colorId) ->
+                    val r = pos.first
+                    val c = pos.second
+                    val blockColor = ShapeColors.getColorForId(colorId)
                     val baseX = c * (cellSize + spacing)
                     val baseY = r * (cellSize + spacing)
 
@@ -221,7 +219,7 @@ fun BoardComposable(
                             rotate(rot)
                         }) {
                             drawRect(
-                                color = Color.White.copy(alpha = clearAlpha),
+                                color = blockColor.copy(alpha = clearAlpha),
                                 topLeft = Offset(-pieceSize / 2, -pieceSize / 2),
                                 size = Size(pieceSize, pieceSize)
                             )
