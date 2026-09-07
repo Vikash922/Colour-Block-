@@ -124,7 +124,7 @@ fun GameScreen(
 
     LaunchedEffect(gameState.lastClearedIndices) {
         if (gameState.lastClearedIndices.isNotEmpty()) {
-            val intensity = 4f
+            val intensity = 0f
             scope.launch {
                 repeat(3) {
                     shakeOffset.animateTo(if (it % 2 == 0) intensity else -intensity, tween(40, easing = LinearEasing))
@@ -136,7 +136,7 @@ fun GameScreen(
 
     LaunchedEffect(comboEvent) {
         if (comboEvent != null) {
-            val intensity = (comboEvent!!.comboCount * 3f).coerceAtMost(12f)
+            val intensity = 0f
             scope.launch {
                 repeat(4) {
                     shakeOffset.animateTo(if (it % 2 == 0) intensity else -intensity, tween(50, easing = LinearEasing))

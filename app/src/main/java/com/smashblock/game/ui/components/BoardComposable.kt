@@ -189,44 +189,21 @@ fun BoardComposable(
                     }
                 }
 
-                // Draw Shattering Particles
-                val progress = 1f - clearAlpha
-                val gravityY = progress * progress * 400f
-
+                // Draw Blocks Staying Still and Fading Out
                 lastClearedIndices.forEach { (pos, colorId) ->
                     val r = pos.first
                     val c = pos.second
                     val blockColor = ShapeColors.getColorForId(colorId)
-                    val baseX = c * (cellSize + spacing)
-                    val baseY = r * (cellSize + spacing)
+                    val x = c * (cellSize + spacing)
+                    val y = r * (cellSize + spacing)
 
-                    for (i in 0..3) {
-                        val isLeft = i % 2 == 0
-                        val isTop = i < 2
-                        val pieceSize = cellSize / 2f
-
-                        val seed = r * 31 + c * 17 + i
-                        val spreadX = ((seed % 10) - 5) * 12f * progress
-                        val spreadY = -((seed % 15) + 5) * 10f * progress + gravityY
-                        val rot = ((seed % 360) * progress * 2f)
-
-                        val startX = baseX + if (isLeft) 0f else pieceSize
-                        val startY = baseY + if (isTop) 0f else pieceSize
-
-                        val finalX = startX + spreadX
-                        val finalY = startY + spreadY
-
-                        withTransform({
-                            translate(left = finalX + pieceSize / 2, top = finalY + pieceSize / 2)
-                            rotate(rot)
-                        }) {
-                            drawRect(
-                                color = blockColor.copy(alpha = clearAlpha),
-                                topLeft = Offset(-pieceSize / 2, -pieceSize / 2),
-                                size = Size(pieceSize, pieceSize)
-                            )
-                        }
-                    }
+                    drawRoundRect(
+                        color = blockColor,
+                        topLeft = Offset(x, y),
+                        size = Size(cellSize, cellSize),
+                        cornerRadius = CornerRadius(8f, 8f),
+                        alpha = clearAlpha
+                    )
                 }
             }
             }
