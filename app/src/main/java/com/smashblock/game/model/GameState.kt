@@ -1,7 +1,7 @@
 package com.smashblock.game.model
 
 data class GameState(
-    val grid: Array<IntArray> = Array(8) { IntArray(8) { 0 } },
+    val grid: Array<IntArray> = Array(10) { IntArray(10) { 0 } },
     val dock: List<BlockShape?> = listOf(null, null, null),
     val score: Int = 0,
     val highScore: Int = 0,

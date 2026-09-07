@@ -38,7 +38,7 @@ class ExampleUnitTest {
 
     @Test
     fun testCanPlaceBoundaryChecks() {
-        val grid = Array(8) { IntArray(8) { 0 } }
+        val grid = Array(10) { IntArray(10) { 0 } }
         val dot = ShapeFactory.DOT
         val line5H = ShapeFactory.LINE_5_H
         val square3X3 = ShapeFactory.SQUARE_3X3
@@ -50,7 +50,7 @@ class ExampleUnitTest {
                     if (shape.matrix[r][c] != 0) {
                         val tr = startRow + r
                         val tc = startCol + c
-                        if (tr !in 0..7 || tc !in 0..7) return false
+                        if (tr !in 0..9 || tc !in 0..9) return false
                         if (matrix[tr][tc] != 0) return false
                     }
                 }
@@ -88,7 +88,7 @@ class ExampleUnitTest {
                     if (shape.matrix[r][c] != 0) {
                         val tr = startRow + r
                         val tc = startCol + c
-                        if (tr !in 0..7 || tc !in 0..7) return false
+                        if (tr !in 0..9 || tc !in 0..9) return false
                         if (matrix[tr][tc] != 0) return false
                     }
                 }
@@ -100,8 +100,8 @@ class ExampleUnitTest {
             val nonNull = dock.filterNotNull()
             if (nonNull.isEmpty()) return false
             for (shape in nonNull) {
-                for (r in 0 until 8) {
-                    for (c in 0 until 8) {
+                for (r in 0 until 10) {
+                    for (c in 0 until 10) {
                         if (canPlace(matrix, shape, r, c)) return false
                     }
                 }
@@ -109,11 +109,11 @@ class ExampleUnitTest {
             return true
         }
 
-        val emptyGrid = Array(8) { IntArray(8) { 0 } }
+        val emptyGrid = Array(10) { IntArray(10) { 0 } }
         assertFalse(checkGameOver(emptyGrid, listOf(ShapeFactory.DOT, ShapeFactory.LINE_2_H)))
 
         // Completely full grid
-        val fullGrid = Array(8) { IntArray(8) { 1 } }
+        val fullGrid = Array(10) { IntArray(10) { 1 } }
         assertTrue(checkGameOver(fullGrid, listOf(ShapeFactory.DOT)))
     }
 }

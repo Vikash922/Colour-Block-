@@ -164,8 +164,8 @@ fun GameScreen(
         val boardPosInWindow = board.positionInWindow()
 
         val boardWidth = board.size.width.toFloat()
-        val actualSpacingPx = 2f
-        val effectiveCellSize = (boardWidth - (actualSpacingPx * 7)) / 8f
+        val actualSpacingPx = with(density) { 2.dp.toPx() }
+        val effectiveCellSize = (boardWidth - (actualSpacingPx * 9)) / 10f
 
         val shapeWidthPx = shape.cols * effectiveCellSize + (shape.cols - 1).coerceAtLeast(0) * actualSpacingPx
         val shapeHeightPx = shape.rows * effectiveCellSize + (shape.rows - 1).coerceAtLeast(0) * actualSpacingPx
@@ -182,7 +182,7 @@ fun GameScreen(
         val targetCol = (relativeX / step).roundToInt()
         val targetRow = (relativeY / step).roundToInt()
 
-        return if (targetRow in 0..7 && targetCol in 0..7) {
+        return if (targetRow in 0..9 && targetCol in 0..9) {
             Pair(targetRow, targetCol)
         } else {
             null
@@ -315,9 +315,9 @@ fun GameScreen(
         if (draggingIndex != null) {
             val draggedShape = gameState.dock.getOrNull(draggingIndex!!)
             if (draggedShape != null) {
-                val actualSpacingPx = 2f
+                val actualSpacingPx = with(density) { 2.dp.toPx() }
                 val actualCellSizePx = if (boardCoordinates != null) {
-                    (boardCoordinates!!.size.width.toFloat() - (actualSpacingPx * 7)) / 8f
+                    (boardCoordinates!!.size.width.toFloat() - (actualSpacingPx * 9)) / 10f
                 } else {
                     boardCellSizePx
                 }

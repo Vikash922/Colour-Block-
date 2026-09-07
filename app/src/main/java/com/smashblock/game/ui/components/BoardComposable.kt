@@ -83,12 +83,12 @@ fun BoardComposable(
             val boardWidth = size.width
             val boardHeight = size.height
             val spacing = 2.dp.toPx()
-            val totalSpacing = spacing * 7
-            val cellSize = (boardWidth - totalSpacing) / 8
+            val totalSpacing = spacing * 9
+            val cellSize = (boardWidth - totalSpacing) / 10
 
             // 1. Draw Empty Grid Slots
-            for (r in 0 until 8) {
-                for (c in 0 until 8) {
+            for (r in 0 until 10) {
+                for (c in 0 until 10) {
                     val x = c * (cellSize + spacing)
                     val y = r * (cellSize + spacing)
 
@@ -123,8 +123,8 @@ fun BoardComposable(
             }
 
             // 3. Draw Occupied Cells
-            for (r in 0 until 8) {
-                for (c in 0 until 8) {
+            for (r in 0 until 10) {
+                for (c in 0 until 10) {
                     val colorId = grid[r][c]
                     if (colorId > 0 && !lastClearedIndices.containsKey(r to c)) {
                         val x = c * (cellSize + spacing)
@@ -144,7 +144,7 @@ fun BoardComposable(
             // 4. Draw Ghost Preview Cells
             if (previewState != null && ghostColor != null) {
                 for ((r, c) in previewState.cells) {
-                    if (r in 0..7 && c in 0..7) {
+                    if (r in 0..9 && c in 0..9) {
                         val x = c * (cellSize + spacing)
                         val y = r * (cellSize + spacing)
 
@@ -160,8 +160,8 @@ fun BoardComposable(
 
             // 5. Draw Cleared Line Burst & Shatter Animation
             if (clearAlpha > 0.01f && lastClearedIndices.isNotEmpty()) {
-                val clearedRows = lastClearedIndices.keys.groupBy { it.first }.filter { it.value.size == 8 }.keys
-                val clearedCols = lastClearedIndices.keys.groupBy { it.second }.filter { it.value.size == 8 }.keys
+                val clearedRows = lastClearedIndices.keys.groupBy { it.first }.filter { it.value.size == 10 }.keys
+                val clearedCols = lastClearedIndices.keys.groupBy { it.second }.filter { it.value.size == 10 }.keys
 
                 val isCombo = clearedRows.size + clearedCols.size >= 2
 
