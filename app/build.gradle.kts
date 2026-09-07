@@ -26,9 +26,9 @@ android {
   signingConfigs {
     create("release") {
       storeFile = file("${rootDir}/release.keystore")
-      storePassword = "android"
-      keyAlias = "release"
-      keyPassword = "android"
+      storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
+      keyAlias = System.getenv("KEY_ALIAS") ?: "release"
+      keyPassword = System.getenv("KEY_PASSWORD") ?: "android"
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
