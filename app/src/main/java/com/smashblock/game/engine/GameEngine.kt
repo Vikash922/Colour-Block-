@@ -59,15 +59,15 @@ class GameEngine(
         if (random != null) {
             randomGen = random
         }
-        var newGrid = Array(10) { IntArray(10) { 0 } }
+        var newGrid = Array(8) { IntArray(8) { 0 } }
         var newScore = 0
 
         // Pre-fill board with 4 random blocks to simulate mid-game start
         repeat(4) {
             val shape = ShapeFactory.getRandomShape(randomGen)
             val validSpots = mutableListOf<Pair<Int, Int>>()
-            for (r in 0..9) {
-                for (c in 0..9) {
+            for (r in 0..7) {
+                for (c in 0..7) {
                     if (canPlace(newGrid, shape, r, c)) {
                         validSpots.add(Pair(r, c))
                     }
@@ -106,7 +106,7 @@ class GameEngine(
         targetRow: Int,
         targetCol: Int
     ): Pair<Array<IntArray>, Int> {
-        val newGrid = Array(10) { r -> IntArray(10) { c -> currentGrid[r][c] } }
+        val newGrid = Array(8) { r -> IntArray(8) { c -> currentGrid[r][c] } }
         val colorId = ShapeColors.getIdForColor(shape.color)
 
         for (r in 0 until shape.rows) {
@@ -118,19 +118,19 @@ class GameEngine(
         }
 
         val fullRows = mutableListOf<Int>()
-        for (r in 0 until 10) {
-            if ((0 until 10).all { c -> newGrid[r][c] != 0 }) fullRows.add(r)
+        for (r in 0 until 8) {
+            if ((0 until 8).all { c -> newGrid[r][c] != 0 }) fullRows.add(r)
         }
         val fullCols = mutableListOf<Int>()
-        for (c in 0 until 10) {
-            if ((0 until 10).all { r -> newGrid[r][c] != 0 }) fullCols.add(c)
+        for (c in 0 until 8) {
+            if ((0 until 8).all { r -> newGrid[r][c] != 0 }) fullCols.add(c)
         }
 
         for (r in fullRows) {
-            for (c in 0 until 10) newGrid[r][c] = 0
+            for (c in 0 until 8) newGrid[r][c] = 0
         }
         for (c in fullCols) {
-            for (r in 0 until 10) newGrid[r][c] = 0
+            for (r in 0 until 8) newGrid[r][c] = 0
         }
 
         val tileCount = shape.tileCount
@@ -148,7 +148,7 @@ class GameEngine(
                     val targetR = startRow + r
                     val targetC = startCol + c
 
-                    if (targetR !in 0..9 || targetC !in 0..9) return false
+                    if (targetR !in 0..7 || targetC !in 0..7) return false
                     if (matrix[targetR][targetC] != 0) return false
                 }
             }
@@ -175,13 +175,13 @@ class GameEngine(
         }
 
         val clearedRows = mutableListOf<Int>()
-        for (r in 0 until 10) {
-            if ((0 until 10).all { c -> simGrid[r][c] != 0 }) clearedRows.add(r)
+        for (r in 0 until 8) {
+            if ((0 until 8).all { c -> simGrid[r][c] != 0 }) clearedRows.add(r)
         }
 
         val clearedCols = mutableListOf<Int>()
-        for (c in 0 until 10) {
-            if ((0 until 10).all { r -> simGrid[r][c] != 0 }) clearedCols.add(c)
+        for (c in 0 until 8) {
+            if ((0 until 8).all { r -> simGrid[r][c] != 0 }) clearedCols.add(c)
         }
 
         return PreviewState(cells, clearedRows, clearedCols)
@@ -212,9 +212,9 @@ class GameEngine(
         updatedDock[shapeIndex] = null
 
         val fullRows = mutableListOf<Int>()
-        for (r in 0 until 10) {
+        for (r in 0 until 8) {
             var isFull = true
-            for (c in 0 until 10) {
+            for (c in 0 until 8) {
                 if (newGrid[r][c] == 0) {
                     isFull = false
                     break
@@ -224,9 +224,9 @@ class GameEngine(
         }
 
         val fullCols = mutableListOf<Int>()
-        for (c in 0 until 10) {
+        for (c in 0 until 8) {
             var isFull = true
-            for (r in 0 until 10) {
+            for (r in 0 until 8) {
                 if (newGrid[r][c] == 0) {
                     isFull = false
                     break
@@ -237,10 +237,10 @@ class GameEngine(
 
         val clearedIndices = mutableMapOf<Pair<Int, Int>, Int>()
         for (r in fullRows) {
-            for (c in 0 until 10) clearedIndices[Pair(r, c)] = newGrid[r][c]
+            for (c in 0 until 8) clearedIndices[Pair(r, c)] = newGrid[r][c]
         }
         for (c in fullCols) {
-            for (r in 0 until 10) clearedIndices[Pair(r, c)] = newGrid[r][c]
+            for (r in 0 until 8) clearedIndices[Pair(r, c)] = newGrid[r][c]
         }
 
         for ((r, c) in clearedIndices.keys) {
@@ -310,8 +310,8 @@ class GameEngine(
         if (nonNullShapes.isEmpty()) return false
 
         for (shape in nonNullShapes) {
-            for (r in 0 until 10) {
-                for (c in 0 until 10) {
+            for (r in 0 until 8) {
+                for (c in 0 until 8) {
                     if (canPlace(matrix, shape, r, c)) return false
                 }
             }

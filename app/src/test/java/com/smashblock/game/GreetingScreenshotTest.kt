@@ -29,7 +29,7 @@ class GreetingScreenshotTest {
 
   @Test
   fun greeting_screenshot() {
-    val grid = Array(10) { IntArray(10) { 0 } }
+    val grid = Array(8) { IntArray(8) { 0 } }
     // Add sample colorful blocks on grid
     grid[3][3] = 1
     grid[3][4] = 2
