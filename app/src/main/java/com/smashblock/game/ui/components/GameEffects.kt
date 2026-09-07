@@ -155,4 +155,36 @@ class RainbowGlowRenderer {
         
         canvas.drawRoundRect(rect, 20f, 20f, borderPaint)
     }
+
+    /**
+     * Draws an animated glowing rainbow border around specific grid cells.
+     */
+    fun drawRainbowBorderForCells(
+        canvas: Canvas,
+        cells: List<Pair<Int, Int>>, // List of (Row, Col)
+        cellSize: Float,
+        startX: Float,
+        startY: Float,
+        timeMillis: Long
+    ) {
+        // 1. Calculate rotation for the animation based on time
+        val rotation = (timeMillis % 3000L) / (3000L / 360f) // Rotates 360 deg every 3s
+        
+        // 2. Animate the matrix and apply to shader
+        gradientMatrix.reset()
+        gradientMatrix.setRotate(rotation, startX + (cellSize * 5), startY + (cellSize * 5))
+        shader.setLocalMatrix(gradientMatrix)
+        
+        // 3. Apply a neon glow effect directly to the border
+        borderPaint.setShadowLayer(20f, 0f, 0f, Color.parseColor("#FF00FF"))
+
+        // 4. Draw the animated border around the specific grid cells
+        for ((row, col) in cells) {
+            val cx = startX + col * cellSize
+            val cy = startY + row * cellSize
+            val rect = RectF(cx + 2f, cy + 2f, cx + cellSize - 2f, cy + cellSize - 2f)
+            
+            canvas.drawRoundRect(rect, 12f, 12f, borderPaint)
+        }
+    }
 }
